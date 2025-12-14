@@ -1,0 +1,105 @@
+# Seplat Cares 2025 Raffle Draw
+
+A React.js application for conducting raffle draws with real-time winner selection and celebration animations.
+
+## Features
+
+- 🎲 **Real Raffle Draw System**: Generates raffle numbers using specific logic and matches them against a database of tickets
+- 🎉 **Confetti Animation**: Celebratory confetti animation when a winner is selected
+- ❄️ **Snowfall Effect**: Animated snowfall background for festive atmosphere
+- 🎨 **Modern UI**: Beautiful, responsive design with Tailwind CSS
+- 📊 **Winner History**: Tracks and displays previous winners with ticket details
+- 🌓 **Dark Mode**: Built-in theme support with dark mode
+
+## Technology Stack
+
+- **React 19.2.0**: Modern React with hooks
+- **Vite**: Fast build tool and dev server
+- **Tailwind CSS**: Utility-first CSS framework
+- **Radix UI**: Accessible component primitives
+- **next-themes**: Theme management
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v18 or higher)
+- npm, yarn, or pnpm
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone <your-repo-url>
+cd sc-raffle
+```
+
+2. Install dependencies:
+```bash
+npm install
+# or
+pnpm install
+# or
+yarn install
+```
+
+3. Start the development server:
+```bash
+npm run dev
+# or
+pnpm dev
+# or
+yarn dev
+```
+
+4. Open your browser and navigate to `http://localhost:5173`
+
+## Project Structure
+
+```
+sc-raffle/
+├── src/
+│   ├── components/
+│   │   ├── confetti.jsx       # Confetti animation component
+│   │   ├── raffle-drawer.jsx  # Main raffle draw component
+│   │   ├── snowfall.jsx        # Snowfall animation
+│   │   ├── theme-provider.jsx  # Theme context provider
+│   │   └── ui/                 # UI component library
+│   ├── hooks/                  # Custom React hooks
+│   ├── lib/
+│   │   ├── raffle.js          # Raffle logic and ticket matching
+│   │   ├── tickets.txt        # Ticket database (JSON)
+│   │   └── utils.js           # Utility functions
+│   ├── App.jsx                # Main app component
+│   ├── main.jsx               # App entry point
+│   └── globals.css            # Global styles
+├── public/                     # Static assets
+└── package.json
+```
+
+## Raffle Logic
+
+The raffle number generation follows a specific pattern:
+- **1st digit**: 0 or 1 (random)
+- **2nd digit**: 9 or 0 (random)
+- **3rd digit**: 0, 1, or 9 (random)
+- **4th-7th digits**: 0-9 (random)
+
+The system generates numbers and matches them against the ticket database to find winners.
+
+## Building for Production
+
+```bash
+npm run build
+# or
+pnpm build
+# or
+yarn build
+```
+
+The production build will be in the `dist/` directory.
+
+## License
+
+This project is private and proprietary.
+
