@@ -99,6 +99,42 @@ yarn build
 
 The production build will be in the `dist/` directory.
 
+## Firebase Deployment
+
+This application is deployed to Firebase Hosting.
+
+### Prerequisites
+
+- Firebase CLI installed (`npm install -g firebase-tools`)
+- Firebase project configured
+- Logged in to Firebase (`firebase login`)
+
+### Deploying
+
+```bash
+npm run deploy
+# or
+npm run build && firebase deploy --only hosting
+```
+
+### Live URLs
+
+- **Hosting URL**: https://seplatcaresraffle.web.app
+- **Project Console**: https://console.firebase.google.com/project/seplatcaresraffle/overview
+
+## Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+```
+
 ## License
 
 This project is private and proprietary.

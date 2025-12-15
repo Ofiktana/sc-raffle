@@ -54,6 +54,34 @@ export default function RaffleDrawer() {
       <Snowfall />
       <Confetti active={showConfetti} onComplete={() => setShowConfetti(false)} />
 
+      {/* Seplat Energy Plc Logo - Top Left */}
+      <div className="fixed top-4 left-4 z-50">
+        <div 
+          className="bg-white rounded-full p-4 md:p-5 flex items-center justify-center shadow-2xl"
+          style={{
+            boxShadow: `
+              0 0 0 1px rgba(255, 255, 255, 0.1),
+              0 4px 20px rgba(0, 0, 0, 0.15),
+              0 8px 30px rgba(0, 0, 0, 0.1),
+              0 2px 8px rgba(0, 0, 0, 0.2),
+              inset 0 1px 2px rgba(255, 255, 255, 0.9),
+              inset 0 -1px 2px rgba(0, 0, 0, 0.05)
+            `,
+            borderRadius: '9999px'
+          }}
+        >
+          <img
+            src="/seplat-logo.png"
+            alt="Seplat Energy Plc"
+            className="h-10 md:h-14 w-auto object-contain"
+            onError={(e) => {
+              // Fallback if logo doesn't exist
+              e.target.style.display = 'none'
+            }}
+          />
+        </div>
+      </div>
+
       {/* Christmas lights decoration */}
       <div className="absolute top-0 left-0 right-0 h-16 flex items-center justify-center gap-8 z-10">
         {[...Array(12)].map((_, i) => (

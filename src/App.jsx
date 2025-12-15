@@ -1,6 +1,7 @@
 import { ThemeProvider } from "@/components/theme-provider"
 import RaffleDrawer from "@/components/raffle-drawer"
 import "./globals.css"
+import "@/lib/firebase" // Initialize Firebase
 
 function App() {
   return (
