@@ -4,8 +4,9 @@ import { Card } from "@/components/ui/card"
 import Snowfall from "@/components/snowfall"
 import Confetti from "@/components/confetti"
 import { findWinnerWithCallback, loadTickets } from "@/lib/raffle"
+import { LogOut } from "lucide-react"
 
-export default function RaffleDrawer() {
+export default function RaffleDrawer({ onLogout }) {
   const [currentNumber, setCurrentNumber] = useState("0000000")
   const [isDrawing, setIsDrawing] = useState(false)
   const [winners, setWinners] = useState([])
@@ -80,6 +81,20 @@ export default function RaffleDrawer() {
             }}
           />
         </div>
+      </div>
+
+      {/* Logout Button - Top Right */}
+      <div className="fixed top-4 right-4 z-50">
+        <Button
+          onClick={onLogout}
+          variant="outline"
+          size="sm"
+          className="bg-white/90 cursor-pointer hover:bg-white shadow-lg hover:text-green-500 transition-colors"
+          style={{ fontFamily: "var(--font-christmas)" }}
+        >
+          <LogOut className="h-4 w-4 mr-2" />
+          Logout
+        </Button>
       </div>
 
       {/* Christmas lights decoration */}
@@ -175,7 +190,7 @@ export default function RaffleDrawer() {
               onClick={handleDraw}
               disabled={isDrawing || !ticketsLoaded}
               size="lg"
-              className="w-full md:w-auto px-12 py-6 text-2xl font-bold bg-secondary hover:bg-secondary/90 text-secondary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full cursor-pointer md:w-auto px-12 py-6 text-2xl font-bold bg-secondary hover:bg-secondary/90 text-secondary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ fontFamily: "var(--font-christmas)" }}
             >
               {!ticketsLoaded ? "Loading Tickets..." : isDrawing ? "Drawing..." : "🎄 Draw Winner 🎄"}
