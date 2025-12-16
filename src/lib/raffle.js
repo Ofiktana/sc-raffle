@@ -109,7 +109,7 @@ async function generateRaffleNumberWithCallback(onDigitDrawn) {
         if (onDigitDrawn) {
             onDigitDrawn(raffleNumber.join('').padEnd(7, '0'), position);
         }
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 100));
     };
 
     // First digit: 0 or 1
