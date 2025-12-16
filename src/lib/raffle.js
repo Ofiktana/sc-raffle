@@ -18,7 +18,7 @@ function getDrawnTickets() {
 }
 
 // Function to add a ticket to the drawn tickets array in localStorage
-function addDrawnTicket(ticket) {
+function addDrawnTicket(ticket, prize = null) {
     try {
         const drawnTickets = getDrawnTickets()
         // Check if ticket already exists (by ticket number)
@@ -26,7 +26,9 @@ function addDrawnTicket(ticket) {
             drawn => drawn.raffle_ticket_7d === ticket.raffle_ticket_7d
         )
         if (!exists) {
-            drawnTickets.push(ticket)
+            // Add prize information to the ticket object
+            const ticketWithPrize = { ...ticket, prize }
+            drawnTickets.push(ticketWithPrize)
             localStorage.setItem(DRAWN_TICKETS_STORAGE_KEY, JSON.stringify(drawnTickets))
         }
     } catch (error) {
@@ -200,7 +202,7 @@ async function generateRaffleNumberWithCallback(onDigitDrawn) {
 }
 
 // Function to find winner with callback for UI updates
-async function findWinnerWithCallback(onDigitDrawn, onWinnerFound) {
+async function findWinnerWithCallback(onDigitDrawn, onWinnerFound, prize = null) {
     // Ensure tickets are loaded
     await loadTickets();
     
@@ -232,13 +234,14 @@ async function findWinnerWithCallback(onDigitDrawn, onWinnerFound) {
                 continue; // Skip this ticket and try again
             }
 
-            // This is a new winner - add it to localStorage
-            addDrawnTicket(matchingDonor);
+            // This is a new winner - add it to localStorage with prize
+            addDrawnTicket(matchingDonor, prize);
 
             const result = {
                 winner: matchingDonor.donor,
                 ticketNumber: generatedRaffle,
-                ticketData: matchingDonor
+                ticketData: matchingDonor,
+                prize: prize
             };
             if (onWinnerFound) {
                 onWinnerFound(result);

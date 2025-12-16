@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import Snowfall from "@/components/snowfall"
 import Confetti from "@/components/confetti"
 import { findWinnerWithCallback, loadTickets, getDrawnTickets } from "@/lib/raffle"
@@ -15,6 +17,10 @@ export default function RaffleDrawer({ onLogout }) {
   const [showConfetti, setShowConfetti] = useState(false)
   const [currentWinner, setCurrentWinner] = useState(null)
   const [ticketsLoaded, setTicketsLoaded] = useState(false)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [prizeDescription, setPrizeDescription] = useState("")
+  const [numberOfWinners, setNumberOfWinners] = useState(1)
+  const [drawingProgress, setDrawingProgress] = useState({ current: 0, total: 0 })
 
   // Load winners from localStorage on component mount
   useEffect(() => {
@@ -24,11 +30,11 @@ export default function RaffleDrawer({ onLogout }) {
         // Convert drawn tickets to winners format (most recent first)
         const winnersFromStorage = [...drawnTickets]
           .reverse() // Reverse to show most recent first
-          .slice(0, 10) // Limit to 10 most recent
           .map(ticket => ({
             winner: ticket.donor,
             ticketNumber: ticket.raffle_ticket_7d,
-            ticketData: ticket
+            ticketData: ticket,
+            prize: ticket.prize || null
           }))
         setWinners(winnersFromStorage)
       } catch (error) {
@@ -50,40 +56,68 @@ export default function RaffleDrawer({ onLogout }) {
     onLogout()
   }
 
-  const handleDraw = async () => {
+  const handleDrawButtonClick = () => {
+    setDialogOpen(true)
+  }
+
+  const handleDialogDraw = async () => {
+    if (!prizeDescription.trim() || numberOfWinners < 1) {
+      alert('Please fill in all fields correctly.')
+      return
+    }
+
+    setDialogOpen(false)
     setIsDrawing(true)
     setCurrentWinner(null)
     setShowConfetti(false)
     setCurrentNumber("0000000")
+    setDrawingProgress({ current: 0, total: numberOfWinners })
+
+    const prize = prizeDescription.trim()
 
     try {
-      const result = await findWinnerWithCallback(
-        // Callback for each digit drawn
-        (partialNumber, position) => {
-          setCurrentNumber(partialNumber)
-        },
-        // Callback when winner is found
-        (winnerData) => {
-          setCurrentWinner(winnerData)
-          setShowConfetti(true)
-          // Update winners from localStorage to ensure consistency
-          const drawnTickets = getDrawnTickets()
-          const updatedWinners = [...drawnTickets]
-            .reverse() // Reverse to show most recent first
-            .slice(0, 10) // Limit to 10 most recent
-            .map(ticket => ({
-              winner: ticket.donor,
-              ticketNumber: ticket.raffle_ticket_7d,
-              ticketData: ticket
-            }))
-          setWinners(updatedWinners)
+      // Draw multiple winners
+      for (let i = 0; i < numberOfWinners; i++) {
+        setDrawingProgress({ current: i + 1, total: numberOfWinners })
+        
+        await findWinnerWithCallback(
+          // Callback for each digit drawn
+          (partialNumber, position) => {
+            setCurrentNumber(partialNumber)
+          },
+          // Callback when winner is found
+          (winnerData) => {
+            setCurrentWinner(winnerData)
+            setShowConfetti(true)
+            // Update winners from localStorage to ensure consistency
+            const drawnTickets = getDrawnTickets()
+            const updatedWinners = [...drawnTickets]
+              .reverse() // Reverse to show most recent first
+              .map(ticket => ({
+                winner: ticket.donor,
+                ticketNumber: ticket.raffle_ticket_7d,
+                ticketData: ticket,
+                prize: ticket.prize || null
+              }))
+            setWinners(updatedWinners)
+          },
+          prize // Pass prize to the function
+        )
+
+        // Small delay between draws for better UX
+        if (i < numberOfWinners - 1) {
+          await new Promise(resolve => setTimeout(resolve, 1000))
         }
-      )
+      }
     } catch (error) {
       console.error('Error drawing winner:', error)
-      alert('An error occurred while drawing. Please try again.')
+      alert(error.message || 'An error occurred while drawing. Please try again.')
     } finally {
       setIsDrawing(false)
+      setDrawingProgress({ current: 0, total: 0 })
+      // Reset form
+      setPrizeDescription("")
+      setNumberOfWinners(1)
     }
   }
 
@@ -222,9 +256,18 @@ export default function RaffleDrawer({ onLogout }) {
               </div>
             )}
 
+            {/* Drawing Progress */}
+            {isDrawing && drawingProgress.total > 1 && (
+              <div className="w-full text-center">
+                <p className="text-lg text-muted-foreground">
+                  Drawing winner {drawingProgress.current} of {drawingProgress.total}
+                </p>
+              </div>
+            )}
+
             {/* Draw Button */}
             <Button
-              onClick={handleDraw}
+              onClick={handleDrawButtonClick}
               disabled={isDrawing || !ticketsLoaded}
               size="lg"
               className="w-full cursor-pointer md:w-auto px-12 py-6 text-2xl font-bold bg-secondary hover:bg-secondary/90 text-secondary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -257,6 +300,11 @@ export default function RaffleDrawer({ onLogout }) {
                     <span className="text-lg font-mono font-bold text-accent">{winner.ticketNumber}</span>
                   </div>
                   <div className="text-xl font-bold text-primary">{winner.winner}</div>
+                  {winner.prize && (
+                    <div className="text-sm text-muted-foreground mt-1 font-medium">
+                      Prize: {winner.prize}
+                    </div>
+                  )}
                   {/* {winner.ticketData?.tribe && (
                     <div className="text-xs text-muted-foreground mt-1">Tribe: {winner.ticketData.tribe}</div>
                   )} */}
@@ -272,6 +320,65 @@ export default function RaffleDrawer({ onLogout }) {
         <div className="fixed top-32 left-12 text-4xl opacity-20 pointer-events-none">🎅</div>
         <div className="fixed top-32 right-12 text-4xl opacity-20 pointer-events-none">☃️</div>
       </div>
+
+      {/* Draw Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle style={{ fontFamily: "var(--font-christmas)" }}>
+              Configure Raffle Draw
+            </DialogTitle>
+            <DialogDescription>
+              Enter the prize details and number of winners to draw.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-4">
+            <div className="flex flex-col gap-2">
+              <label htmlFor="prize" className="text-sm font-medium">
+                Prize Description
+              </label>
+              <Input
+                id="prize"
+                type="text"
+                placeholder="Please describe raffle prize to be won"
+                value={prizeDescription}
+                onChange={(e) => setPrizeDescription(e.target.value)}
+                disabled={isDrawing}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label htmlFor="winners" className="text-sm font-medium">
+                Number of Winners
+              </label>
+              <Input
+                id="winners"
+                type="number"
+                placeholder="Choose number of winners"
+                min="1"
+                value={numberOfWinners}
+                onChange={(e) => setNumberOfWinners(Math.max(1, parseInt(e.target.value) || 1))}
+                disabled={isDrawing}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDialogOpen(false)}
+              disabled={isDrawing}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDialogDraw}
+              disabled={isDrawing || !prizeDescription.trim() || numberOfWinners < 1}
+              style={{ fontFamily: "var(--font-christmas)" }}
+            >
+              Draw
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
