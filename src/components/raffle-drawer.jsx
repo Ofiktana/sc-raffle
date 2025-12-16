@@ -3,8 +3,10 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import Snowfall from "@/components/snowfall"
 import Confetti from "@/components/confetti"
-import { findWinnerWithCallback, loadTickets } from "@/lib/raffle"
+import { findWinnerWithCallback, loadTickets, getDrawnTickets } from "@/lib/raffle"
 import { LogOut } from "lucide-react"
+
+const DRAWN_TICKETS_STORAGE_KEY = 'raffle_drawn_tickets'
 
 export default function RaffleDrawer({ onLogout }) {
   const [currentNumber, setCurrentNumber] = useState("0000000")
@@ -14,14 +16,39 @@ export default function RaffleDrawer({ onLogout }) {
   const [currentWinner, setCurrentWinner] = useState(null)
   const [ticketsLoaded, setTicketsLoaded] = useState(false)
 
-  // Preload tickets data on component mount
+  // Load winners from localStorage on component mount
   useEffect(() => {
+    const loadWinnersFromStorage = () => {
+      try {
+        const drawnTickets = getDrawnTickets()
+        // Convert drawn tickets to winners format (most recent first)
+        const winnersFromStorage = [...drawnTickets]
+          .reverse() // Reverse to show most recent first
+          .slice(0, 10) // Limit to 10 most recent
+          .map(ticket => ({
+            winner: ticket.donor,
+            ticketNumber: ticket.raffle_ticket_7d,
+            ticketData: ticket
+          }))
+        setWinners(winnersFromStorage)
+      } catch (error) {
+        console.error('Error loading winners from localStorage:', error)
+      }
+    }
+
     loadTickets().then(() => {
       setTicketsLoaded(true)
+      loadWinnersFromStorage()
     }).catch(error => {
       console.error('Failed to load tickets:', error)
     })
   }, [])
+
+  // Handle logout and clear drawn tickets from localStorage
+  const handleLogout = () => {
+    localStorage.removeItem(DRAWN_TICKETS_STORAGE_KEY)
+    onLogout()
+  }
 
   const handleDraw = async () => {
     setIsDrawing(true)
@@ -39,7 +66,17 @@ export default function RaffleDrawer({ onLogout }) {
         (winnerData) => {
           setCurrentWinner(winnerData)
           setShowConfetti(true)
-          setWinners((prev) => [winnerData, ...prev].slice(0, 10))
+          // Update winners from localStorage to ensure consistency
+          const drawnTickets = getDrawnTickets()
+          const updatedWinners = [...drawnTickets]
+            .reverse() // Reverse to show most recent first
+            .slice(0, 10) // Limit to 10 most recent
+            .map(ticket => ({
+              winner: ticket.donor,
+              ticketNumber: ticket.raffle_ticket_7d,
+              ticketData: ticket
+            }))
+          setWinners(updatedWinners)
         }
       )
     } catch (error) {
@@ -86,7 +123,7 @@ export default function RaffleDrawer({ onLogout }) {
       {/* Logout Button - Top Right */}
       <div className="fixed top-4 right-4 z-50">
         <Button
-          onClick={onLogout}
+          onClick={handleLogout}
           variant="outline"
           size="sm"
           className="bg-white/90 cursor-pointer hover:bg-white shadow-lg hover:text-green-500 transition-colors"

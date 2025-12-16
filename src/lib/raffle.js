@@ -3,6 +3,45 @@ let df_tickets = []
 let ticketsLoaded = false
 let ticketsLoading = false
 
+// Local storage key for drawn tickets
+const DRAWN_TICKETS_STORAGE_KEY = 'raffle_drawn_tickets'
+
+// Function to get previously drawn tickets from localStorage
+function getDrawnTickets() {
+    try {
+        const stored = localStorage.getItem(DRAWN_TICKETS_STORAGE_KEY)
+        return stored ? JSON.parse(stored) : []
+    } catch (error) {
+        console.error('Error reading drawn tickets from localStorage:', error)
+        return []
+    }
+}
+
+// Function to add a ticket to the drawn tickets array in localStorage
+function addDrawnTicket(ticket) {
+    try {
+        const drawnTickets = getDrawnTickets()
+        // Check if ticket already exists (by ticket number)
+        const exists = drawnTickets.some(
+            drawn => drawn.raffle_ticket_7d === ticket.raffle_ticket_7d
+        )
+        if (!exists) {
+            drawnTickets.push(ticket)
+            localStorage.setItem(DRAWN_TICKETS_STORAGE_KEY, JSON.stringify(drawnTickets))
+        }
+    } catch (error) {
+        console.error('Error saving drawn ticket to localStorage:', error)
+    }
+}
+
+// Function to check if a ticket has already been drawn
+function isTicketAlreadyDrawn(ticketNumber) {
+    const drawnTickets = getDrawnTickets()
+    return drawnTickets.some(
+        drawn => drawn.raffle_ticket_7d === ticketNumber
+    )
+}
+
 // Function to load tickets data
 async function loadTickets() {
   if (ticketsLoaded) return df_tickets
@@ -84,13 +123,37 @@ async function generateRaffleNumberJS() {
 
 // Function to find a donor by a generated raffle number
 async function findDonorByRaffleNumberJS() {
-    while (true) {
+    // Ensure tickets are loaded
+    await loadTickets();
+    
+    // Get previously drawn tickets
+    const drawnTickets = getDrawnTickets();
+    
+    // Check if all tickets have been drawn
+    if (drawnTickets.length >= df_tickets.length) {
+        throw new Error('All tickets have already been drawn');
+    }
+
+    let attempts = 0;
+    const maxAttempts = 1000; // Safety limit
+
+    while (attempts < maxAttempts) {
         const generatedRaffle = await generateRaffleNumberJS();
+        attempts++;
 
         // Find if the generated raffle number exists in df_tickets
         const matchingDonor = df_tickets.find(ticket => ticket.raffle_ticket_7d === generatedRaffle);
 
         if (matchingDonor) {
+            // Check if this ticket has already been drawn
+            if (isTicketAlreadyDrawn(generatedRaffle)) {
+                console.log(`Ticket ${generatedRaffle} has already been drawn. Retrying...`);
+                continue; // Skip this ticket and try again
+            }
+
+            // This is a new winner - add it to localStorage
+            addDrawnTicket(matchingDonor);
+
             const donorName = matchingDonor.donor;
             console.log(`\nCongratulations! The winner is: ${donorName}`);
             return { winner: donorName, ticketNumber: generatedRaffle, ticketData: matchingDonor };
@@ -98,6 +161,8 @@ async function findDonorByRaffleNumberJS() {
             console.log(`\nNo donor found for the generated raffle number: ${generatedRaffle}. Retrying...`);
         }
     }
+
+    throw new Error('Could not find a winner after maximum attempts');
 }
 
 // Function to generate raffle number with callback for each digit (for UI animation)
@@ -143,8 +208,16 @@ async function findWinnerWithCallback(onDigitDrawn, onWinnerFound) {
         throw new Error('No tickets data available');
     }
 
+    // Get previously drawn tickets
+    const drawnTickets = getDrawnTickets();
+    
+    // Check if all tickets have been drawn
+    if (drawnTickets.length >= df_tickets.length) {
+        throw new Error('All tickets have already been drawn');
+    }
+
     let attempts = 0;
-    const maxAttempts = 100; // Safety limit to prevent infinite loops
+    const maxAttempts = 1000; // Increased limit since we may need to skip more tickets
 
     while (attempts < maxAttempts) {
         const generatedRaffle = await generateRaffleNumberWithCallback(onDigitDrawn);
@@ -153,6 +226,15 @@ async function findWinnerWithCallback(onDigitDrawn, onWinnerFound) {
         const matchingDonor = df_tickets.find(ticket => ticket.raffle_ticket_7d === generatedRaffle);
 
         if (matchingDonor) {
+            // Check if this ticket has already been drawn
+            if (isTicketAlreadyDrawn(generatedRaffle)) {
+                console.log(`Ticket ${generatedRaffle} has already been drawn. Retrying...`);
+                continue; // Skip this ticket and try again
+            }
+
+            // This is a new winner - add it to localStorage
+            addDrawnTicket(matchingDonor);
+
             const result = {
                 winner: matchingDonor.donor,
                 ticketNumber: generatedRaffle,
@@ -168,4 +250,4 @@ async function findWinnerWithCallback(onDigitDrawn, onWinnerFound) {
     throw new Error('Could not find a winner after maximum attempts');
 }
 
-export { generateRaffleNumberJS, findDonorByRaffleNumberJS, findWinnerWithCallback, generateRaffleNumberWithCallback, loadTickets }
+export { generateRaffleNumberJS, findDonorByRaffleNumberJS, findWinnerWithCallback, generateRaffleNumberWithCallback, loadTickets, getDrawnTickets, addDrawnTicket, isTicketAlreadyDrawn }
