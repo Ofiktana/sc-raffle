@@ -328,13 +328,13 @@ export default function RaffleDrawer({ onLogout }) {
             <DialogTitle style={{ fontFamily: "var(--font-christmas)" }}>
               Configure Raffle Draw
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription style={{ fontFamily: "var(--font-christmas)" }}>
               Enter the prize details and number of winners to draw.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-4">
             <div className="flex flex-col gap-2">
-              <label htmlFor="prize" className="text-sm font-medium">
+              <label htmlFor="prize" className="text-sm font-medium" style={{ fontFamily: "var(--font-christmas)" }}>
                 Prize Description
               </label>
               <Input
@@ -344,10 +344,11 @@ export default function RaffleDrawer({ onLogout }) {
                 value={prizeDescription}
                 onChange={(e) => setPrizeDescription(e.target.value)}
                 disabled={isDrawing}
+                style={{ fontFamily: "var(--font-christmas)" }}
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label htmlFor="winners" className="text-sm font-medium">
+              <label htmlFor="winners" className="text-sm font-medium" style={{ fontFamily: "var(--font-christmas)" }}>
                 Number of Winners
               </label>
               <Input
@@ -358,6 +359,7 @@ export default function RaffleDrawer({ onLogout }) {
                 value={numberOfWinners}
                 onChange={(e) => setNumberOfWinners(Math.max(1, parseInt(e.target.value) || 1))}
                 disabled={isDrawing}
+                style={{ fontFamily: "var(--font-christmas)" }}
               />
             </div>
           </div>
@@ -366,6 +368,7 @@ export default function RaffleDrawer({ onLogout }) {
               variant="outline"
               onClick={() => setDialogOpen(false)}
               disabled={isDrawing}
+              style={{ fontFamily: "var(--font-christmas)" }}
             >
               Cancel
             </Button>
